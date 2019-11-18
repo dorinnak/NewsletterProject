@@ -1,0 +1,54 @@
+{"cnn": 
+	{"rss": "http://rss.cnn.com/rss/cnn_topstories.rss"},
+ "cnbc":
+	{"rss": "https://www.cnbc.com/id/10000664/device/rss/rss.html"},
+ "cbn":
+	{"rss": "https://www1.cbn.com/rss-cbn-articles-cbnnews.xml"},
+ "financialtimes":
+	{"rss": "http://www.ft.com/rss"},
+ "wsj_business":
+	{"rss": "https://feeds.a.dj.com/rss/WSJcomUSBusiness.xml"},
+ "wsj_market":
+	{"rss": "https://feeds.a.dj.com/rss/RSSMarketsMain.xml"},
+ "wsj_tech":
+	{"rss": "https://feeds.a.dj.com/rss/RSSWSJD.xml"},
+ "bs_top":
+	{"rss": "https://www.business-standard.com/rss/home_page_top_stories.rss"},
+ "bs_market":
+	{"rss": "https://www.business-standard.com/rss/markets-106.rss"},
+ "bs_finance":
+	{"rss": "https://www.business-standard.com/rss/finance-103.rss"},
+ "dailytelegraph":
+	{"rss": "https://www.dailytelegraph.com.au/news/breaking-news/rss"},
+ "theguardian": 
+	{"rss": "https://www.theguardian.com/uk/rss"},
+ "washingtonpost": 
+	{"rss": "http://feeds.washingtonpost.com/rss/world"},
+ "skynews":
+	{"rss": "http://feeds.skynews.com/feeds/rss/home.xml"},
+ "fortune": 
+	{"rss": "https://fortune.com/feed"},
+ "google news":
+	{"rss": "https://news.google.com/rss"},
+ "reddit":
+	{"rss": "https://www.reddit.com/r/worldnews/.rss"},
+ "nytimes_world":
+	{"rss": "https://www.nytimes.com/svc/collections/v1/publish/https://www.nytimes.com/section/world/rss.xml"},
+ "nytimes_business": 
+	{"rss": "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml"},
+ "nytimes_economy": 
+	{"rss": "https://rss.nytimes.com/services/xml/rss/nyt/Economy.xml"},
+ "yahoonews":
+	{"rss": "https://www.yahoo.com/news/rss/world"},
+ "yahoofinance":
+	{"rss": "https://finance.yahoo.com/rss/topstories"},
+ "investing":
+	{"rss": "https://www.investing.com/rss/news.rss"},
+ "economist":
+	{"rss": "https://www.economist.com/business/rss.xml"}
+}
+
+
+
+
+
