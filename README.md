@@ -32,8 +32,7 @@ Using "URLs_finance.json", this file automatically outputs the newsletter as an 
 3 - Required Python Packages
 ===========================
 
-newsletter.py makes use of other Python packages.
-These need to be installed before running:
+newsletter.py makes use of other Python packages which need to be installed before running:
 
 pip install feedparser
 pip install newspaper3k 
