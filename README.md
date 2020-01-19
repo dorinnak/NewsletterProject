@@ -5,15 +5,15 @@ Automated Newsletter Creation
 1 - Included files
 ===========================
 
-Create_Newsletter.py ----- run this code and all the packages will be installed and the HTML newsletter will be created
+Create_Newsletter.py --- run this code and all the packages will be installed and the HTML newsletter will be created
 
 newsletter.py ----------- code for newsletter creation
 
-package_installer.py ----- code for automated installation of requiered Python packages for newsletter.py
+package_installer.py --- code for automated installation of requiered Python packages for newsletter.py
 
 URLs_finance.json	------- list of all URLs to be scraped by newsletter.py (links can be changed/replaced anytime)
 
-folder: logos	------------ logos used by newsletter.py for the HTML file
+folder: logos	---------- logos used by newsletter.py for the HTML file
 
 folder: templates	------- HTML template used by newsletter.py
 
