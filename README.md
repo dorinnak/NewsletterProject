@@ -36,7 +36,12 @@ Using "URLs_finance.json", this file automatically outputs the newsletter as an 
 3 - Required Python Packages
 ===========================
 
-newsletter.py makes use of other Python packages which need to be installed before running:
+newsletter.py makes use of other Python packages which need to be installed before running.
+
+Installation of all requiered packages can be automated with the included "package_installer.py" file.
+
+- In CMD in your Python installation folder: python package_installer.py
+- In Python: import package_installer
 
 pip install feedparser
 
@@ -60,11 +65,4 @@ pip install Flask
 
 pip install urllib5 
 
-pip install Unidecode 
-
-
-Installation of all requiered packages can be automated with the included "package_installer.py" file.
-
-- In CMD in your Python installation folder: python package_installer.py
-
-- In Python: import package_installer
+pip install Unidecode
