@@ -29,7 +29,7 @@ Using "URLs_finance.json", this file automatically outputs the newsletter as an 
 - In Python: import Create_Newsletter
 
 
-3 - Requiered Python Packages
+3 - Required Python Packages
 ===========================
 
 newsletter.py makes use of other Python packages.
