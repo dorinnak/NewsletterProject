@@ -1,19 +1,9 @@
-'''In order to run the newsletter creation, several Python 
-packages are requiered to be downloaded:
+import subprocess
+import sys
 
-pip install feedparser 
-pip install newspaper3k 
-pip install DateTime 
-pip install pandas 
-pip install regex 
-pip install nltk 
-pip install scikit-learn 
-pip install numpy 
-pip install matplotlib 
-pip install Flask 
-pip install urllib5 
-pip install Unidecode '''
-
+def install(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+	
 import warnings
 warnings.filterwarnings("ignore")
 import feedparser as fp
@@ -57,7 +47,7 @@ def lemmatize_text(text):
     return [lemmatizer.lemmatize(w) for w in w_tokenizer.tokenize(text)]
 
 def create_newsletter(file): 
-	
+
     print("Starting scraping...")
     with open(file) as data_file: #Loads the JSON files with news URLs
         companies = json.load(data_file) # change to sources instead of companies
@@ -774,24 +764,20 @@ def extract_stocks():
     url = ("https://financialmodelingprep.com/api/v3/stock/gainers")
     gainers = get_jsonparsed_data(url)
 
-    global df_losers, df_gainers
-    df_losers = pd.DataFrame(losers.get("mostLoserStock"))
-    df_gainers = pd.DataFrame(gainers.get("mostGainerStock"))
-    df_losers = df_losers.sort_values('changesPercentage', ascending=False)
-    df_gainers = df_gainers.sort_values('changesPercentage', ascending=False)
-
-    df_losers = df_losers.reset_index()
-    df_gainers = df_gainers.reset_index()
+    global losers_df, gainers_df
+    losers_df = pd.DataFrame.from_dict(losers["mostLoserStock"])
+    gainers_df = pd.DataFrame.from_dict(gainers["mostGainerStock"])
+    losers_df = losers_df.sort_values(by=['changesPercentage'])
+    gainers_df = gainers_df.sort_values(by=['changesPercentage'])
 
     #names of biggest loser and gainer companies
-    loser = df_losers['ticker'].values[0]
-    gainer = df_gainers['ticker'].values[0]
+    loser = next(iter(losers.values()))[0].get('ticker')
+    gainer = next(iter(gainers.values()))[0].get('ticker')
 
     #creates urls to access historical data of respective companies
     loser_url = ("https://financialmodelingprep.com/api/v3/historical-price-full/"+ loser +"?timeseries=30")
     gainer_url = ("https://financialmodelingprep.com/api/v3/historical-price-full/"+ gainer +"?timeseries=30")
     names = ["loser", "gainer"]
-    name_stock = [loser, gainer]	
     c = 0
 
     #creates respective graphs for the close values of the last 30 days of the companies and saves it as png
@@ -804,10 +790,13 @@ def extract_stocks():
         df["date"] = pd.to_datetime(df["date"])
         df = df[["date","close"]].copy()
         df.set_index('date', inplace=True)
-        df.plot()		
-        fig = plt.xlabel('Today`s biggest ' + names[c] + ': ' + name_stock[c] + ' last 30 Days [price]')
+        df.plot(legend = None, color='black')
+        #uncomment next two rows if you dont want axes included in the graph
+        #fig = plt.yticks([])
+        fig = plt.xticks([])
+        fig = plt.xlabel('Today`s biggest ' + names[c] + ': last 30 Days [price]')
         fig = plt.gcf()
-        savename = names[c] + "_plot.png"
+        savename = names[c] + "_plot_" + today + ".png"
         fig.savefig(savename, bbox_inches='tight')
         c =+ 1
 
@@ -854,86 +843,86 @@ def create_HTML_file():
             text10 = rand_text[3],\
             text11 = rand_text[4],\
             text12 = rand_text[5],\
-            gainer1 = df_gainers.ticker[0], \
-           gainer2 = df_gainers.ticker[1], \
-           gainer3 = df_gainers.ticker[2], \
-           gainer4 = df_gainers.ticker[3], \
-           gainer5 = df_gainers.ticker[4], \
-           gainer6 = df_gainers.ticker[5], \
-           gainer7 = df_gainers.ticker[6], \
-           gainer8 = df_gainers.ticker[7], \
-           gainer9 = df_gainers.ticker[8], \
-           gainer10 = df_gainers.ticker[9],\
-           ch1 = df_gainers.changes[0], \
-           ch2 = df_gainers.changes[1], \
-           ch3 = df_gainers.changes[2], \
-           ch4 = df_gainers.changes[3], \
-           ch5 = df_gainers.changes[4], \
-           ch6 = df_gainers.changes[5], \
-           ch7 = df_gainers.changes[6], \
-           ch8 = df_gainers.changes[7], \
-           ch9 = df_gainers.changes[8], \
-           ch10 = df_gainers.changes[9], \
-           pch1 = df_gainers.changesPercentage[0], \
-           pch2 = df_gainers.changesPercentage[1], \
-           pch3 = df_gainers.changesPercentage[2], \
-           pch4 = df_gainers.changesPercentage[3], \
-           pch5 = df_gainers.changesPercentage[4], \
-           pch6 = df_gainers.changesPercentage[5], \
-           pch7 = df_gainers.changesPercentage[6], \
-           pch8 = df_gainers.changesPercentage[7], \
-           pch9 = df_gainers.changesPercentage[8], \
-           pch10 = df_gainers.changesPercentage[9], \
-            pp1 =  df_gainers.price[0] , \
-           pp2 =  df_gainers.price[1] , \
-           pp3 =  df_gainers.price[2] , \
-           pp4 =  df_gainers.price[3] , \
-           pp5 =  df_gainers.price[4] , \
-           pp6 =  df_gainers.price[5] , \
-           pp7 =  df_gainers.price[6] , \
-           pp8 =  df_gainers.price[7] , \
-           pp9 =  df_gainers.price[8] , \
-           pp10 =  df_gainers.price[9] , \
-            loser1 = df_losers.ticker[0], \
-            loser2 = df_losers.ticker[1], \
-            loser3 = df_losers.ticker[2], \
-            loser4 = df_losers.ticker[3], \
-            loser5 = df_losers.ticker[4], \
-            loser6 = df_losers.ticker[5], \
-            loser7 = df_losers.ticker[6], \
-            loser8 = df_losers.ticker[7], \
-            loser9 = df_losers.ticker[8], \
-            loser10 = df_losers.ticker[9], \
-            chan1 = df_losers.changes[0], \
-           chan2 = df_losers.changes[1], \
-           chan3 = df_losers.changes[2], \
-           chan4 = df_losers.changes[3], \
-           chan5 = df_losers.changes[4], \
-           chan6 = df_losers.changes[5], \
-           chan7 = df_losers.changes[6], \
-           chan8 = df_losers.changes[7], \
-           chan9 = df_losers.changes[8], \
-           chan10 = df_losers.changes[9], \
-            pchan1 = df_losers.changesPercentage[0], \
-           pchan2 = df_losers.changesPercentage[1], \
-           pchan3 = df_losers.changesPercentage[2], \
-           pchan4 = df_losers.changesPercentage[3], \
-           pchan5 = df_losers.changesPercentage[4], \
-           pchan6 = df_losers.changesPercentage[5], \
-           pchan7 = df_losers.changesPercentage[6], \
-           pchan8 = df_losers.changesPercentage[7], \
-           pchan9 = df_losers.changesPercentage[8], \
-           pchan10 = df_losers.changesPercentage[9], \
-            price1 = df_losers.price[0],\
-            price2 = df_losers.price[1],\
-            price3 = df_losers.price[2],\
-            price4 = df_losers.price[3],\
-            price5 = df_losers.price[4],\
-            price6 = df_losers.price[5],\
-            price7 = df_losers.price[6],\
-            price8 = df_losers.price[7],\
-            price9 = df_losers.price[8],\
-            price10 = df_losers.price[9]
+            gainer1 = gainers_df.ticker[0], \
+           gainer2 = gainers_df.ticker[1], \
+           gainer3 = gainers_df.ticker[2], \
+           gainer4 = gainers_df.ticker[3], \
+           gainer5 = gainers_df.ticker[4], \
+           gainer6 = gainers_df.ticker[5], \
+           gainer7 = gainers_df.ticker[6], \
+           gainer8 = gainers_df.ticker[7], \
+           gainer9 = gainers_df.ticker[8], \
+           gainer10 = gainers_df.ticker[9],\
+           ch1 = gainers_df.changes[0], \
+           ch2 = gainers_df.changes[1], \
+           ch3 = gainers_df.changes[2], \
+           ch4 = gainers_df.changes[3], \
+           ch5 = gainers_df.changes[4], \
+           ch6 = gainers_df.changes[5], \
+           ch7 = gainers_df.changes[6], \
+           ch8 = gainers_df.changes[7], \
+           ch9 = gainers_df.changes[8], \
+           ch10 = gainers_df.changes[9], \
+           pch1 = gainers_df.changesPercentage[0], \
+           pch2 = gainers_df.changesPercentage[1], \
+           pch3 = gainers_df.changesPercentage[2], \
+           pch4 = gainers_df.changesPercentage[3], \
+           pch5 = gainers_df.changesPercentage[4], \
+           pch6 = gainers_df.changesPercentage[5], \
+           pch7 = gainers_df.changesPercentage[6], \
+           pch8 = gainers_df.changesPercentage[7], \
+           pch9 = gainers_df.changesPercentage[8], \
+           pch10 = gainers_df.changesPercentage[9], \
+            pp1 =  gainers_df.price[0] , \
+           pp2 =  gainers_df.price[1] , \
+           pp3 =  gainers_df.price[2] , \
+           pp4 =  gainers_df.price[3] , \
+           pp5 =  gainers_df.price[4] , \
+           pp6 =  gainers_df.price[5] , \
+           pp7 =  gainers_df.price[6] , \
+           pp8 =  gainers_df.price[7] , \
+           pp9 =  gainers_df.price[8] , \
+           pp10 =  gainers_df.price[9] , \
+            loser1 = losers_df.ticker[0], \
+            loser2 = losers_df.ticker[1], \
+            loser3 = losers_df.ticker[2], \
+            loser4 = losers_df.ticker[3], \
+            loser5 = losers_df.ticker[4], \
+            loser6 = losers_df.ticker[5], \
+            loser7 = losers_df.ticker[6], \
+            loser8 = losers_df.ticker[7], \
+            loser9 = losers_df.ticker[8], \
+            loser10 = losers_df.ticker[9], \
+            chan1 = losers_df.changes[0], \
+           chan2 = losers_df.changes[1], \
+           chan3 = losers_df.changes[2], \
+           chan4 = losers_df.changes[3], \
+           chan5 = losers_df.changes[4], \
+           chan6 = losers_df.changes[5], \
+           chan7 = losers_df.changes[6], \
+           chan8 = losers_df.changes[7], \
+           chan9 = losers_df.changes[8], \
+           chan10 = losers_df.changes[9], \
+            pchan1 = losers_df.changesPercentage[0], \
+           pchan2 = losers_df.changesPercentage[1], \
+           pchan3 = losers_df.changesPercentage[2], \
+           pchan4 = losers_df.changesPercentage[3], \
+           pchan5 = losers_df.changesPercentage[4], \
+           pchan6 = losers_df.changesPercentage[5], \
+           pchan7 = losers_df.changesPercentage[6], \
+           pchan8 = losers_df.changesPercentage[7], \
+           pchan9 = losers_df.changesPercentage[8], \
+           pchan10 = losers_df.changesPercentage[9], \
+            price1 = losers_df.price[0],\
+            price2 = losers_df.price[1],\
+            price3 = losers_df.price[2],\
+            price4 = losers_df.price[3],\
+            price5 = losers_df.price[4],\
+            price6 = losers_df.price[5],\
+            price7 = losers_df.price[6],\
+            price8 = losers_df.price[7],\
+            price9 = losers_df.price[8],\
+            price10 = losers_df.price[9]
 
                                   )
     f = open(str("NewsLetter_" + today + ".html"),'w', encoding="utf-8")
