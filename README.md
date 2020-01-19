@@ -5,7 +5,7 @@ Automated Newsletter Creation
 1 - Included files
 ===========================
 
-Create_Newsletter.py	--- run this code and all the packages will be installed and the HTML newsletter will be created
+Create_Newsletter.py	--- run this code and the HTML newsletter will be created
 
 newsletter.py ----------- code for newsletter creation
 
