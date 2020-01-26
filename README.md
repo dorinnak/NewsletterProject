@@ -5,7 +5,7 @@ Automated Newsletter Creation
 1 - Included files
 ===========================
 
-Create_Newsletter.py	--- run this code and all the packages will be installed and the HTML newsletter will be created
+Create_Newsletter.py	--- run this code and the HTML newsletter will be created
 
 newsletter.py ----------- code for newsletter creation
 
@@ -32,39 +32,41 @@ Using "URLs_finance.json", this file automatically outputs the newsletter as an 
 - In Python: import Create_Newsletter
 
 
-3 - Required Python Packages
+3 - Required Python Version and Packages
 ===========================
 
-newsletter.py makes use of other Python packages which need to be installed before running.
+newsletter.py runs on Python 3.7.3 and makes use of other Python packages which need to be installed before running.
 
-Installation of all requiered packages can be automated with the included "package_installer.py" file.
+Installation of all required packages can be automated with the included "package_installer.py" file.
 
 - In CMD in your Python installation folder: python package_installer.py
 - In Python: import package_installer
 
-pip install feedparser
+This is a list of all packages used and it's corresponding version:
 
-pip install newspaper3k
+pip install feedparser / 5.2.1
 
-pip install DateTime 
+pip install newspaper3k /  0.2.8
 
-pip install pandas 
+pip install DateTime / 4.3
 
-pip install regex 
+pip install pandas / 0.24.2
 
-pip install nltk 
+pip install regex / 2.2.1
 
-pip install scikit-learn 
+pip install nltk / 3.4
 
-pip install numpy 
+pip install scikit-learn / 0.20.3
 
-pip install matplotlib 
+pip install numpy / 1.16.2
 
-pip install Flask 
+pip install matplotlib / 3.0.3
 
-pip install urllib5 
+pip install Flask / 1.0.2
 
-pip install Unidecode 
+pip install urllib5 / 5.0.0
+
+pip install Unidecode / 1.1.1
 
 
 
