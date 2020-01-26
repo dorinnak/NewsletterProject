@@ -57,10 +57,10 @@ def lemmatize_text(text):
     return [lemmatizer.lemmatize(w) for w in w_tokenizer.tokenize(text)]
 
 def create_newsletter(file): 
-	
+
     print("Starting scraping...")
     with open(file) as data_file: #Loads the JSON files with news URLs
-        companies = json.load(data_file) # change to sources instead of companies
+        companies = json.load(data_file)
 
     text_list, source_list, article_list, date_list, time_list, title_list, image_list, keywords_list, summaries_list = [], [], [], [], [], [], [], [], []
 
@@ -72,9 +72,8 @@ def create_newsletter(file):
                 d = fp.parse(url)
                 article = {}
                 for entry in d.entries:
-                    if hasattr(entry, 'published') and (((dateutil.parser.parse(getattr(entry, 'published'))).strftime("%Y-%m-%d") == today)  or ((dateutil.parser.parse(getattr(entry, 'published'))).strftime("%Y-%m-%d") == yesterday)):
+                    if hasattr(entry,'published') and (((dateutil.parser.parse(getattr(entry,'published'))).strftime("%Y-%m-%d") == today) or ((dateutil.parser.parse(getattr(entry, 'published'))).strftime("%Y-%m-%d") == yesterday)):
                         article['source'] = source
-                        #print(article["source"]) ##
                         source_list.append(article['source'])
 
                         # getting the article URLs
@@ -89,7 +88,6 @@ def create_newsletter(file):
                         date_list.append(date_formated)
                         time_list.append(time_formated)
 
-                        # "downloading" the articles
                         content = Article(entry.link)
                         try:
                             content.download()
@@ -101,8 +99,8 @@ def create_newsletter(file):
                             print("continuing...")
 
                         # save the "downloaded" content
-                        title = content.title #extract article titles
-                        image = content.top_image #extract article images
+                        title = content.title # extract article titles
+                        image = content.top_image # extract article images
                         image_list.append(image)
                         keywords = content.keywords
                         keywords_list.append(keywords)
@@ -184,15 +182,18 @@ def create_newsletter(file):
     print("Scraping complete.")
     
     article_eucd(news_df_daily)
-    eucl_dist_df.head()
     
     print("Analysis complete.")
+    
+    global news_df_daily_cluster_1, news_df_daily_cluster_2, news_df_daily_cluster_3, news_df_daily_cluster_4, news_df_daily_cluster_5, news_df_daily_cluster_6
     
     article_filtering_eucd(eucl_dist_df)
     
     global rand_text_, rand_source, rand_link, rand_title, rand_img
     rand_text_, rand_source, rand_link, rand_title, rand_img = [], [], [], [], [] 
     unique_cosim_vals_1, unique_cosim_vals_2, unique_cosim_vals_3, unique_cosim_vals_4, unique_cosim_vals_5, unique_cosim_vals_6, unique_cosim_vals_7 = [], [], [], [], [], [], []
+    unique_cosim_vals_1_filter, unique_cosim_vals_2_filter, unique_cosim_vals_3_filter, unique_cosim_vals_4_filter, unique_cosim_vals_5_filter, unique_cosim_vals_6_filter, unique_cosim_vals_7_filter = [], [], [], [], [], [], []
+   
     count_vectorizer = CountVectorizer()
 
     if list(news_df_daily_cluster_1.shape)[0] > 2:
@@ -218,23 +219,34 @@ def create_newsletter(file):
             elif yesterday in cosim_filter_cluster_1["published_date"].unique():
                 cosim_filter_cluster_1 = (cosim_filter_cluster_1.loc[cosim_filter_cluster_1["published_date"] == yesterday]).iloc[[0]]
             
-            rand_info(news_df_daily_cluster_1, 1, 250) 
+            rand_info(cosim_filter_cluster_1, 1, 250) 
             
-            if len(unique_cosim_vals_1) > 1:
-                dict_pos_cosim_val_1 = {elem: get_indexes(df_cosim_1, elem) for elem in ((np.array(unique_cosim_vals_1[1:2])).astype(str))}
-
-                index_list_titles_clust1 = []
-                find_indexes(dict_pos_cosim_val_1, index_list_titles_clust1) # apply the function for finding the indexes we got in the dataframe
-                index_list_titles_clust1 = list(set(index_list_titles_clust1)) #creating a set for filtering out duplicate row and col indexes
-
-                cosim_filter_cluster_1 = (news_df_daily_cluster_1.iloc[index_list_titles_clust1,:]) #select the articles based on the indexes
-
-                if today in cosim_filter_cluster_1["published_date"].unique():
-                    cosim_filter_cluster_1 = (cosim_filter_cluster_1.loc[cosim_filter_cluster_1["published_date"] == today]).iloc[[0]]
-                elif yesterday in cosim_filter_cluster_1["published_date"].unique():
-                    cosim_filter_cluster_1 = (cosim_filter_cluster_1.loc[cosim_filter_cluster_1["published_date"] == yesterday]).iloc[[0]]
+            # check whether there are other articles in cluster
+            news_df_daily_cluster_1 = news_df_daily_cluster_1.reset_index(drop=True)
+            news_df_daily_cluster_1_used = news_df_daily_cluster_1.index.isin(index_list_titles_clust1)
+            news_df_daily_cluster_1_filter = news_df_daily_cluster_1[~news_df_daily_cluster_1_used]
+            
+            if list(news_df_daily_cluster_1_filter.shape)[0] > 1:            
+                clean_titles_list_1_filter = list(news_df_daily_cluster_1_filter['clean_title']) 
+                count_matrix_title_sparse_1_filter = count_vectorizer.fit_transform(clean_titles_list_1_filter) 
+                count_matrix_title_np_1_filter = count_matrix_title_sparse_1_filter.todense()
+                count_matrix_title_df_1_filter = pd.DataFrame(count_matrix_title_np_1_filter, columns=count_vectorizer.get_feature_names())
+                df_cosim_1_filter = pd.DataFrame(cosine_similarity(count_matrix_title_df_1_filter, count_matrix_title_df_1_filter))
+                create_value_list(df_cosim_1_filter, unique_cosim_vals_1_filter)
                 
-                rand_info(cosim_filter_cluster_1, 1, 250)  
+                dict_pos_cosim_val_1_filter = {elem: get_indexes(df_cosim_1_filter, elem) for elem in ((np.array(unique_cosim_vals_1_filter[0:1])).astype(str))}
+
+                index_list_titles_clust1_filter = []
+                find_indexes(dict_pos_cosim_val_1_filter, index_list_titles_clust1_filter) # apply the function for finding the indexes we got in the dataframe
+                index_list_titles_clust1_filter = list(set(index_list_titles_clust1_filter))
+
+                cosim_filter_cluster_1_filter = (news_df_daily_cluster_1_filter.iloc[index_list_titles_clust1_filter,:]) #select the articles based on the indexes
+                if today in cosim_filter_cluster_1_filter["published_date"].unique():
+                    cosim_filter_cluster_1_filter = (cosim_filter_cluster_1_filter.loc[cosim_filter_cluster_1_filter["published_date"] == today]).iloc[[0]]
+                elif yesterday in cosim_filter_cluster_1_filter["published_date"].unique():
+                    cosim_filter_cluster_1_filter = (cosim_filter_cluster_1_filter.loc[cosim_filter_cluster_1_filter["published_date"] == yesterday]).iloc[[0]]
+                    
+                rand_info(cosim_filter_cluster_1_filter, 1, 250) 
                 
         else:
             rand_info(news_df_daily_cluster_1, 1, 250)
@@ -266,21 +278,32 @@ def create_newsletter(file):
 
             rand_info(cosim_filter_cluster_2, 1, 250)
 
-            if len(unique_cosim_vals_2) > 1:
-                dict_pos_cosim_val_2 = {elem: get_indexes(df_cosim_2, elem) for elem in ((np.array(unique_cosim_vals_2[1:2])).astype(str))}
-
-                index_list_titles_clust2 = []
-                find_indexes(dict_pos_cosim_val_2, index_list_titles_clust2) # apply the function for finding the indexes we got in the dataframe
-                index_list_titles_clust2 = list(set(index_list_titles_clust2)) #creating a set for filtering out duplicate row and col indexes
-
-                cosim_filter_cluster_2 = (news_df_daily_cluster_2.iloc[index_list_titles_clust2,:]) #select the articles based on the indexes
-
-                if today in cosim_filter_cluster_2["published_date"].unique():
-                    cosim_filter_cluster_2 = (cosim_filter_cluster_2.loc[cosim_filter_cluster_2["published_date"] == today]).iloc[[0]]
-                elif yesterday in cosim_filter_cluster_2["published_date"].unique():
-                    cosim_filter_cluster_2 = (cosim_filter_cluster_2.loc[cosim_filter_cluster_2["published_date"] == yesterday]).iloc[[0]]
+            # check whether there are other articles in cluster
+            news_df_daily_cluster_2 = news_df_daily_cluster_2.reset_index(drop=True)
+            news_df_daily_cluster_2_used = news_df_daily_cluster_2.index.isin(index_list_titles_clust2)
+            news_df_daily_cluster_2_filter = news_df_daily_cluster_2[~news_df_daily_cluster_2_used]
+            
+            if list(news_df_daily_cluster_2_filter.shape)[0] > 1:            
+                clean_titles_list_2_filter = list(news_df_daily_cluster_2_filter['clean_title']) 
+                count_matrix_title_sparse_2_filter = count_vectorizer.fit_transform(clean_titles_list_2_filter) 
+                count_matrix_title_np_2_filter = count_matrix_title_sparse_2_filter.todense()
+                count_matrix_title_df_2_filter = pd.DataFrame(count_matrix_title_np_2_filter, columns=count_vectorizer.get_feature_names())
+                df_cosim_2_filter = pd.DataFrame(cosine_similarity(count_matrix_title_df_2_filter, count_matrix_title_df_2_filter))
+                create_value_list(df_cosim_2_filter, unique_cosim_vals_2_filter)
                 
-                rand_info(cosim_filter_cluster_2, 1, 250)  
+                dict_pos_cosim_val_2_filter = {elem: get_indexes(df_cosim_2_filter, elem) for elem in ((np.array(unique_cosim_vals_2_filter[0:1])).astype(str))}
+
+                index_list_titles_clust2_filter = []
+                find_indexes(dict_pos_cosim_val_2_filter, index_list_titles_clust2_filter) # apply the function for finding the indexes we got in the dataframe
+                index_list_titles_clust2_filter = list(set(index_list_titles_clust2_filter))
+
+                cosim_filter_cluster_2_filter = (news_df_daily_cluster_2_filter.iloc[index_list_titles_clust2_filter,:]) #select the articles based on the indexes
+                if today in cosim_filter_cluster_2_filter["published_date"].unique():
+                    cosim_filter_cluster_2_filter = (cosim_filter_cluster_2_filter.loc[cosim_filter_cluster_2_filter["published_date"] == today]).iloc[[0]]
+                elif yesterday in cosim_filter_cluster_2_filter["published_date"].unique():
+                    cosim_filter_cluster_2_filter = (cosim_filter_cluster_2_filter.loc[cosim_filter_cluster_2_filter["published_date"] == yesterday]).iloc[[0]]
+                    
+                rand_info(cosim_filter_cluster_2_filter, 1, 250) 
                 
         else:
             rand_info(news_df_daily_cluster_2, 1, 250)
@@ -312,21 +335,32 @@ def create_newsletter(file):
 
             rand_info(cosim_filter_cluster_3, 1, 250)
 
-            if len(unique_cosim_vals_3) > 1:
-                dict_pos_cosim_val_3 = {elem: get_indexes(df_cosim_3, elem) for elem in ((np.array(unique_cosim_vals_3[1:2])).astype(str))}
+            # check whether there are other articles in cluster
+            news_df_daily_cluster_3 = news_df_daily_cluster_3.reset_index(drop=True)
+            news_df_daily_cluster_3_used = news_df_daily_cluster_3.index.isin(index_list_titles_clust3)
+            news_df_daily_cluster_3_filter = news_df_daily_cluster_3[~news_df_daily_cluster_3_used]
+            
+            if list(news_df_daily_cluster_3_filter.shape)[0] > 1:            
+                clean_titles_list_3_filter = list(news_df_daily_cluster_3_filter['clean_title']) 
+                count_matrix_title_sparse_3_filter = count_vectorizer.fit_transform(clean_titles_list_3_filter) 
+                count_matrix_title_np_3_filter = count_matrix_title_sparse_3_filter.todense()
+                count_matrix_title_df_3_filter = pd.DataFrame(count_matrix_title_np_3_filter, columns=count_vectorizer.get_feature_names())
+                df_cosim_3_filter = pd.DataFrame(cosine_similarity(count_matrix_title_df_3_filter, count_matrix_title_df_3_filter))
+                create_value_list(df_cosim_3_filter, unique_cosim_vals_3_filter)
+                
+                dict_pos_cosim_val_3_filter = {elem: get_indexes(df_cosim_3_filter, elem) for elem in ((np.array(unique_cosim_vals_3_filter[0:1])).astype(str))}
 
-                index_list_titles_clust3 = []
-                find_indexes(dict_pos_cosim_val_3, index_list_titles_clust3) # apply the function for finding the indexes we got in the dataframe
-                index_list_titles_clust3 = list(set(index_list_titles_clust3)) #creating a set for filtering out duplicate row and col indexes
+                index_list_titles_clust3_filter = []
+                find_indexes(dict_pos_cosim_val_3_filter, index_list_titles_clust3_filter) # apply the function for finding the indexes we got in the dataframe
+                index_list_titles_clust3_filter = list(set(index_list_titles_clust3_filter))
 
-                cosim_filter_cluster_3 = (news_df_daily_cluster_3.iloc[index_list_titles_clust3,:]) #select the articles based on the indexes
-
-                if today in cosim_filter_cluster_3["published_date"].unique():
-                    cosim_filter_cluster_3 = (cosim_filter_cluster_3.loc[cosim_filter_cluster_3["published_date"] == today]).iloc[[0]]
-                elif yesterday in cosim_filter_cluster_3["published_date"].unique():
-                    cosim_filter_cluster_3 = (cosim_filter_cluster_3.loc[cosim_filter_cluster_3["published_date"] == yesterday]).iloc[[0]]
-
-                rand_info(cosim_filter_cluster_3, 1, 250)
+                cosim_filter_cluster_3_filter = (news_df_daily_cluster_3_filter.iloc[index_list_titles_clust3_filter,:]) #select the articles based on the indexes
+                if today in cosim_filter_cluster_3_filter["published_date"].unique():
+                    cosim_filter_cluster_3_filter = (cosim_filter_cluster_3_filter.loc[cosim_filter_cluster_3_filter["published_date"] == today]).iloc[[0]]
+                elif yesterday in cosim_filter_cluster_3_filter["published_date"].unique():
+                    cosim_filter_cluster_3_filter = (cosim_filter_cluster_3_filter.loc[cosim_filter_cluster_3_filter["published_date"] == yesterday]).iloc[[0]]
+                    
+                rand_info(cosim_filter_cluster_3_filter, 1, 250) 
                 
         else:
             rand_info(news_df_daily_cluster_3, 1, 250)
@@ -358,170 +392,150 @@ def create_newsletter(file):
 
             rand_info(cosim_filter_cluster_4, 1, 250)
 
-            if len(rand_title) < 8:
-                if len(unique_cosim_vals_4) > 1:
-                    dict_pos_cosim_val_4 = {elem: get_indexes(df_cosim_4, elem) for elem in ((np.array(unique_cosim_vals_4[1:2])).astype(str))}
+            # check whether there are other articles in cluster
+            news_df_daily_cluster_4 = news_df_daily_cluster_4.reset_index(drop=True)
+            news_df_daily_cluster_4_used = news_df_daily_cluster_4.index.isin(index_list_titles_clust4)
+            news_df_daily_cluster_4_filter = news_df_daily_cluster_4[~news_df_daily_cluster_4_used]
+            
+            if list(news_df_daily_cluster_4_filter.shape)[0] > 1:            
+                clean_titles_list_4_filter = list(news_df_daily_cluster_4_filter['clean_title']) 
+                count_matrix_title_sparse_4_filter = count_vectorizer.fit_transform(clean_titles_list_4_filter) 
+                count_matrix_title_np_4_filter = count_matrix_title_sparse_4_filter.todense()
+                count_matrix_title_df_4_filter = pd.DataFrame(count_matrix_title_np_4_filter, columns=count_vectorizer.get_feature_names())
+                df_cosim_4_filter = pd.DataFrame(cosine_similarity(count_matrix_title_df_4_filter, count_matrix_title_df_4_filter))
+                create_value_list(df_cosim_4_filter, unique_cosim_vals_4_filter)
+                
+                dict_pos_cosim_val_4_filter = {elem: get_indexes(df_cosim_4_filter, elem) for elem in ((np.array(unique_cosim_vals_4_filter[0:1])).astype(str))}
 
-                    index_list_titles_clust4 = []
-                    find_indexes(dict_pos_cosim_val_4, index_list_titles_clust4) # apply the function for finding the indexes we got in the dataframe
-                    index_list_titles_clust4 = list(set(index_list_titles_clust4)) #creating a set for filtering out duplicate row and col indexes
+                index_list_titles_clust4_filter = []
+                find_indexes(dict_pos_cosim_val_4_filter, index_list_titles_clust4_filter) # apply the function for finding the indexes we got in the dataframe
+                index_list_titles_clust4_filter = list(set(index_list_titles_clust4_filter))
 
-                    cosim_filter_cluster_4 = (news_df_daily_cluster_4.iloc[index_list_titles_clust4,:]) #select the articles based on the indexes
-
-                    if today in cosim_filter_cluster_4["published_date"].unique():
-                        cosim_filter_cluster_4 = (cosim_filter_cluster_4.loc[cosim_filter_cluster_4["published_date"] == today]).iloc[[0]]
-                    elif yesterday in cosim_filter_cluster_4["published_date"].unique():
-                        cosim_filter_cluster_4 = (cosim_filter_cluster_4.loc[cosim_filter_cluster_4["published_date"] == yesterday]).iloc[[0]]
-
-                    rand_info(cosim_filter_cluster_4, 1, 250)
+                cosim_filter_cluster_4_filter = (news_df_daily_cluster_4_filter.iloc[index_list_titles_clust4_filter,:]) #select the articles based on the indexes
+                if today in cosim_filter_cluster_4_filter["published_date"].unique():
+                    cosim_filter_cluster_4_filter = (cosim_filter_cluster_4_filter.loc[cosim_filter_cluster_4_filter["published_date"] == today]).iloc[[0]]
+                elif yesterday in cosim_filter_cluster_4_filter["published_date"].unique():
+                    cosim_filter_cluster_4_filter = (cosim_filter_cluster_4_filter.loc[cosim_filter_cluster_4_filter["published_date"] == yesterday]).iloc[[0]]
+                    
+                rand_info(cosim_filter_cluster_4_filter, 1, 250) 
         else:
             rand_info(news_df_daily_cluster_4, 1, 250)
 
     else:
         rand_info(news_df_daily_cluster_4, 1, 250)
 
-    if len(rand_title) < 8:
-        if list(news_df_daily_cluster_5.shape)[0] > 2:
-            clean_titles_list_5 = list(news_df_daily_cluster_5['clean_title']) 
-            count_matrix_title_sparse_5 = count_vectorizer.fit_transform(clean_titles_list_5) 
-            count_matrix_title_np_5 = count_matrix_title_sparse_5.todense()
-            count_matrix_title_df_5 = pd.DataFrame(count_matrix_title_np_5, columns=count_vectorizer.get_feature_names())
-            df_cosim_5 = pd.DataFrame(cosine_similarity(count_matrix_title_df_5, count_matrix_title_df_5))
-            create_value_list(df_cosim_5, unique_cosim_vals_5)
 
-            if len(unique_cosim_vals_5) != 0:
-                dict_pos_cosim_val_5 = {elem: get_indexes(df_cosim_5, elem) for elem in ((np.array(unique_cosim_vals_5[0:1])).astype(str))}
+    if list(news_df_daily_cluster_5.shape)[0] > 2:
+        clean_titles_list_5 = list(news_df_daily_cluster_5['clean_title']) 
+        count_matrix_title_sparse_5 = count_vectorizer.fit_transform(clean_titles_list_5) 
+        count_matrix_title_np_5 = count_matrix_title_sparse_5.todense()
+        count_matrix_title_df_5 = pd.DataFrame(count_matrix_title_np_5, columns=count_vectorizer.get_feature_names())
+        df_cosim_5 = pd.DataFrame(cosine_similarity(count_matrix_title_df_5, count_matrix_title_df_5))
+        create_value_list(df_cosim_5, unique_cosim_vals_5)
 
-                index_list_titles_clust5 = []
-                find_indexes(dict_pos_cosim_val_5, index_list_titles_clust5) # apply the function for finding the indexes we got in the dataframe
-                index_list_titles_clust5 = list(set(index_list_titles_clust5)) #creating a set for filtering out duplicate row and col indexes
+        if len(unique_cosim_vals_5) != 0:
+            dict_pos_cosim_val_5 = {elem: get_indexes(df_cosim_5, elem) for elem in ((np.array(unique_cosim_vals_5[0:1])).astype(str))}
 
-                cosim_filter_cluster_5 = (news_df_daily_cluster_5.iloc[index_list_titles_clust5,:]) #select the articles based on the indexes
+            index_list_titles_clust5 = []
+            find_indexes(dict_pos_cosim_val_5, index_list_titles_clust5) # apply the function for finding the indexes we got in the dataframe
+            index_list_titles_clust5 = list(set(index_list_titles_clust5)) #creating a set for filtering out duplicate row and col indexes
 
-                if today in cosim_filter_cluster_5["published_date"].unique():
-                    cosim_filter_cluster_5 = (cosim_filter_cluster_5.loc[cosim_filter_cluster_5["published_date"] == today]).iloc[[0]]
-                elif yesterday in cosim_filter_cluster_5["published_date"].unique():
-                    cosim_filter_cluster_5 = (cosim_filter_cluster_5.loc[cosim_filter_cluster_5["published_date"] == yesterday]).iloc[[0]]
+            cosim_filter_cluster_5 = (news_df_daily_cluster_5.iloc[index_list_titles_clust5,:]) #select the articles based on the indexes
 
-                rand_info(cosim_filter_cluster_5, 1, 250)
+            if today in cosim_filter_cluster_5["published_date"].unique():
+                cosim_filter_cluster_5 = (cosim_filter_cluster_5.loc[cosim_filter_cluster_5["published_date"] == today]).iloc[[0]]
+            elif yesterday in cosim_filter_cluster_5["published_date"].unique():
+                cosim_filter_cluster_5 = (cosim_filter_cluster_5.loc[cosim_filter_cluster_5["published_date"] == yesterday]).iloc[[0]]
+
+            rand_info(cosim_filter_cluster_5, 1, 250)
+
+            # check whether there are other articles in cluster
+            news_df_daily_cluster_5 = news_df_daily_cluster_5.reset_index(drop=True)
+            news_df_daily_cluster_5_used = news_df_daily_cluster_5.index.isin(index_list_titles_clust5)
+            news_df_daily_cluster_5_filter = news_df_daily_cluster_5[~news_df_daily_cluster_5_used]
+            
+            if list(news_df_daily_cluster_5_filter.shape)[0] > 1:            
+                clean_titles_list_5_filter = list(news_df_daily_cluster_5_filter['clean_title']) 
+                count_matrix_title_sparse_5_filter = count_vectorizer.fit_transform(clean_titles_list_5_filter) 
+                count_matrix_title_np_5_filter = count_matrix_title_sparse_5_filter.todense()
+                count_matrix_title_df_5_filter = pd.DataFrame(count_matrix_title_np_5_filter, columns=count_vectorizer.get_feature_names())
+                df_cosim_5_filter = pd.DataFrame(cosine_similarity(count_matrix_title_df_5_filter, count_matrix_title_df_5_filter))
+                create_value_list(df_cosim_5_filter, unique_cosim_vals_5_filter)
                 
-                if len(rand_title) < 8:
-                    if len(unique_cosim_vals_5) > 1:
-                        if len(rand_title) < 7:
-                            dict_pos_cosim_val_5 = {elem: get_indexes(df_cosim_5, elem) for elem in ((np.array(unique_cosim_vals_5[1:2])).astype(str))}
+                dict_pos_cosim_val_5_filter = {elem: get_indexes(df_cosim_5_filter, elem) for elem in ((np.array(unique_cosim_vals_5_filter[0:1])).astype(str))}
 
-                            index_list_titles_clust5 = []
-                            find_indexes(dict_pos_cosim_val_5, index_list_titles_clust5) # apply the function for finding the indexes we got in the dataframe
-                            index_list_titles_clust5 = list(set(index_list_titles_clust5)) #creating a set for filtering out duplicate row and col indexes
+                index_list_titles_clust5_filter = []
+                find_indexes(dict_pos_cosim_val_5_filter, index_list_titles_clust5_filter) # apply the function for finding the indexes we got in the dataframe
+                index_list_titles_clust5_filter = list(set(index_list_titles_clust5_filter))
 
-                            cosim_filter_cluster_5 = (news_df_daily_cluster_5.iloc[index_list_titles_clust5,:]) #select the articles based on the indexes
-
-                            if today in cosim_filter_cluster_5["published_date"].unique():
-                                cosim_filter_cluster_5 = (cosim_filter_cluster_5.loc[cosim_filter_cluster_5["published_date"] == today]).iloc[[0]]
-                            elif yesterday in cosim_filter_cluster_5["published_date"].unique():
-                                cosim_filter_cluster_5 = (cosim_filter_cluster_5.loc[cosim_filter_cluster_5["published_date"] == yesterday]).iloc[[0]]
-
-                            rand_info(cosim_filter_cluster_5, 1, 250)
-                            
-            else:
-                rand_info(news_df_daily_cluster_5, 1, 250)
+                cosim_filter_cluster_5_filter = (news_df_daily_cluster_5_filter.iloc[index_list_titles_clust5_filter,:]) #select the articles based on the indexes
+                if today in cosim_filter_cluster_5_filter["published_date"].unique():
+                    cosim_filter_cluster_5_filter = (cosim_filter_cluster_5_filter.loc[cosim_filter_cluster_5_filter["published_date"] == today]).iloc[[0]]
+                elif yesterday in cosim_filter_cluster_5_filter["published_date"].unique():
+                    cosim_filter_cluster_5_filter = (cosim_filter_cluster_5_filter.loc[cosim_filter_cluster_5_filter["published_date"] == yesterday]).iloc[[0]]
+                    
+                rand_info(cosim_filter_cluster_5_filter, 1, 250) 
 
         else:
             rand_info(news_df_daily_cluster_5, 1, 250)
-    
-    if len(rand_title) < 8:    
-        if list(news_df_daily_cluster_6.shape)[0] > 2:
-            clean_titles_list_6 = list(news_df_daily_cluster_6['clean_title']) 
-            count_matrix_title_sparse_6 = count_vectorizer.fit_transform(clean_titles_list_6) 
-            count_matrix_title_np_6 = count_matrix_title_sparse_6.todense()
-            count_matrix_title_df_6 = pd.DataFrame(count_matrix_title_np_6, columns=count_vectorizer.get_feature_names())
-            df_cosim_6 = pd.DataFrame(cosine_similarity(count_matrix_title_df_6, count_matrix_title_df_6))
-            create_value_list(df_cosim_6, unique_cosim_vals_6)
 
-            if len(unique_cosim_vals_6) != 0:
-                dict_pos_cosim_val_6 = {elem: get_indexes(df_cosim_6, elem) for elem in ((np.array(unique_cosim_vals_6[0:1])).astype(str))}
+    else:
+        rand_info(news_df_daily_cluster_5, 1, 250)
+     
+    if list(news_df_daily_cluster_6.shape)[0] > 2:
+        clean_titles_list_6 = list(news_df_daily_cluster_6['clean_title']) 
+        count_matrix_title_sparse_6 = count_vectorizer.fit_transform(clean_titles_list_6) 
+        count_matrix_title_np_6 = count_matrix_title_sparse_6.todense()
+        count_matrix_title_df_6 = pd.DataFrame(count_matrix_title_np_6, columns=count_vectorizer.get_feature_names())
+        df_cosim_6 = pd.DataFrame(cosine_similarity(count_matrix_title_df_6, count_matrix_title_df_6))
+        create_value_list(df_cosim_6, unique_cosim_vals_6)
 
-                index_list_titles_clust6 = []
-                find_indexes(dict_pos_cosim_val_6, index_list_titles_clust6) # apply the function for finding the indexes we got in the dataframe
-                index_list_titles_clust6 = list(set(index_list_titles_clust6)) #creating a set for filtering out duplicate row and col indexes
+        if len(unique_cosim_vals_6) != 0:
+            dict_pos_cosim_val_6 = {elem: get_indexes(df_cosim_6, elem) for elem in ((np.array(unique_cosim_vals_6[0:1])).astype(str))}
 
-                cosim_filter_cluster_6 = (news_df_daily_cluster_6.iloc[index_list_titles_clust6,:]) #select the articles based on the indexes
+            index_list_titles_clust6 = []
+            find_indexes(dict_pos_cosim_val_6, index_list_titles_clust6) # apply the function for finding the indexes we got in the dataframe
+            index_list_titles_clust6 = list(set(index_list_titles_clust6)) #creating a set for filtering out duplicate row and col indexes
 
-                if today in cosim_filter_cluster_6["published_date"].unique():
-                    cosim_filter_cluster_6 = (cosim_filter_cluster_6.loc[cosim_filter_cluster_6["published_date"] == today]).iloc[[0]]
-                elif yesterday in cosim_filter_cluster_6["published_date"].unique():
-                    cosim_filter_cluster_6 = (cosim_filter_cluster_6.loc[cosim_filter_cluster_6["published_date"] == yesterday]).iloc[[0]]
+            cosim_filter_cluster_6 = (news_df_daily_cluster_6.iloc[index_list_titles_clust6,:]) #select the articles based on the indexes
 
-                rand_info(cosim_filter_cluster_6, 1, 250)
+            if today in cosim_filter_cluster_6["published_date"].unique():
+                cosim_filter_cluster_6 = (cosim_filter_cluster_6.loc[cosim_filter_cluster_6["published_date"] == today]).iloc[[0]]
+            elif yesterday in cosim_filter_cluster_6["published_date"].unique():
+                cosim_filter_cluster_6 = (cosim_filter_cluster_6.loc[cosim_filter_cluster_6["published_date"] == yesterday]).iloc[[0]]
+
+            rand_info(cosim_filter_cluster_6, 1, 250)
+
+            # check whether there are other articles in cluster
+            news_df_daily_cluster_6 = news_df_daily_cluster_6.reset_index(drop=True)
+            news_df_daily_cluster_6_used = news_df_daily_cluster_6.index.isin(index_list_titles_clust6)
+            news_df_daily_cluster_6_filter = news_df_daily_cluster_6[~news_df_daily_cluster_6_used]
+            
+            if list(news_df_daily_cluster_6_filter.shape)[0] > 1:            
+                clean_titles_list_6_filter = list(news_df_daily_cluster_6_filter['clean_title']) 
+                count_matrix_title_sparse_6_filter = count_vectorizer.fit_transform(clean_titles_list_6_filter) 
+                count_matrix_title_np_6_filter = count_matrix_title_sparse_6_filter.todense()
+                count_matrix_title_df_6_filter = pd.DataFrame(count_matrix_title_np_6_filter, columns=count_vectorizer.get_feature_names())
+                df_cosim_6_filter = pd.DataFrame(cosine_similarity(count_matrix_title_df_6_filter, count_matrix_title_df_6_filter))
+                create_value_list(df_cosim_6_filter, unique_cosim_vals_6_filter)
                 
-                if len(rand_title) < 8:
-                    if len(unique_cosim_vals_6) > 2:
-                            dict_pos_cosim_val_6 = {elem: get_indexes(df_cosim_6, elem) for elem in ((np.array(unique_cosim_vals_6[1:2])).astype(str))}
+                dict_pos_cosim_val_6_filter = {elem: get_indexes(df_cosim_6_filter, elem) for elem in ((np.array(unique_cosim_vals_6_filter[0:1])).astype(str))}
 
-                            index_list_titles_clust6 = []
-                            find_indexes(dict_pos_cosim_val_6, index_list_titles_clust6) # apply the function for finding the indexes we got in the dataframe
-                            index_list_titles_clust6 = list(set(index_list_titles_clust6)) #creating a set for filtering out duplicate row and col indexes
+                index_list_titles_clust6_filter = []
+                find_indexes(dict_pos_cosim_val_6_filter, index_list_titles_clust6_filter) # apply the function for finding the indexes we got in the dataframe
+                index_list_titles_clust6_filter = list(set(index_list_titles_clust6_filter))
 
-                            cosim_filter_cluster_6 = (news_df_daily_cluster_6.iloc[index_list_titles_clust6,:]) #select the articles based on the indexes
-
-                            if today in cosim_filter_cluster_6["published_date"].unique():
-                                cosim_filter_cluster_6 = (cosim_filter_cluster_6.loc[cosim_filter_cluster_6["published_date"] == today]).iloc[[0]]
-                            elif yesterday in cosim_filter_cluster_6["published_date"].unique():
-                                cosim_filter_cluster_6 = (cosim_filter_cluster_6.loc[cosim_filter_cluster_6["published_date"] == yesterday]).iloc[[0]]
-
-                            rand_info(cosim_filter_cluster_6, 1, 250)
-            else:
-                rand_info(news_df_daily_cluster_6, 1, 250)
+                cosim_filter_cluster_6_filter = (news_df_daily_cluster_6_filter.iloc[index_list_titles_clust6_filter,:]) #select the articles based on the indexes
+                if today in cosim_filter_cluster_6_filter["published_date"].unique():
+                    cosim_filter_cluster_6_filter = (cosim_filter_cluster_6_filter.loc[cosim_filter_cluster_6_filter["published_date"] == today]).iloc[[0]]
+                elif yesterday in cosim_filter_cluster_6_filter["published_date"].unique():
+                    cosim_filter_cluster_6_filter = (cosim_filter_cluster_6_filter.loc[cosim_filter_cluster_6_filter["published_date"] == yesterday]).iloc[[0]]
+                    
+                rand_info(cosim_filter_cluster_6_filter, 1, 250) 
         else:
             rand_info(news_df_daily_cluster_6, 1, 250)
-            
-    if len(rand_title) < 8:    
-        if list(news_df_daily_cluster_7.shape)[0] > 2:
-            clean_titles_list_7 = list(news_df_daily_cluster_7['clean_title']) 
-            count_matrix_title_sparse_7 = count_vectorizer.fit_transform(clean_titles_list_7) 
-            count_matrix_title_np_7 = count_matrix_title_sparse_7.todense()
-            count_matrix_title_df_7 = pd.DataFrame(count_matrix_title_np_7, columns=count_vectorizer.get_feature_names())
-            df_cosim_7 = pd.DataFrame(cosine_similarity(count_matrix_title_df_7, count_matrix_title_df_7))
-            create_value_list(df_cosim_7, unique_cosim_vals_7)
-
-            if len(unique_cosim_vals_7) != 0:
-                dict_pos_cosim_val_7 = {elem: get_indexes(df_cosim_7, elem) for elem in ((np.array(unique_cosim_vals_7[0:1])).astype(str))}
-
-                index_list_titles_clust7 = []
-                find_indexes(dict_pos_cosim_val_7, index_list_titles_clust7) # apply the function for finding the indexes we got in the dataframe
-                index_list_titles_clust7 = list(set(index_list_titles_clust7)) #creating a set for filtering out duplicate row and col indexes
-
-                cosim_filter_cluster_7 = (news_df_daily_cluster_7.iloc[index_list_titles_clust7,:]) #select the articles based on the indexes
-
-                if today in cosim_filter_cluster_7["published_date"].unique():
-                    cosim_filter_cluster_7 = (cosim_filter_cluster_7.loc[cosim_filter_cluster_7["published_date"] == today]).iloc[[0]]
-                elif yesterday in cosim_filter_cluster_7["published_date"].unique():
-                    cosim_filter_cluster_7 = (cosim_filter_cluster_7.loc[cosim_filter_cluster_7["published_date"] == yesterday]).iloc[[0]]
-
-                rand_info(cosim_filter_cluster_7, 1, 250)
-                
-                if len(rand_title) < 8:
-                    if len(unique_cosim_vals_7) > 2:
-                            dict_pos_cosim_val_7 = {elem: get_indexes(df_cosim_7, elem) for elem in ((np.array(unique_cosim_vals_7[1:2])).astype(str))}
-
-                            index_list_titles_clust7 = []
-                            find_indexes(dict_pos_cosim_val_7, index_list_titles_clust7) # apply the function for finding the indexes we got in the dataframe
-                            index_list_titles_clust7 = list(set(index_list_titles_clust7)) #creating a set for filtering out duplicate row and col indexes
-
-                            cosim_filter_cluster_7 = (news_df_daily_cluster_7.iloc[index_list_titles_clust7,:]) #select the articles based on the indexes
-
-                            if today in cosim_filter_cluster_7["published_date"].unique():
-                                cosim_filter_cluster_7 = (cosim_filter_cluster_7.loc[cosim_filter_cluster_7["published_date"] == today]).iloc[[0]]
-                            elif yesterday in cosim_filter_cluster_7["published_date"].unique():
-                                cosim_filter_cluster_7 = (cosim_filter_cluster_7loc[cosim_filter_cluster_7["published_date"] == yesterday]).iloc[[0]]
-
-                            rand_info(cosim_filter_cluster_7, 1, 250)                
-                
-            else:
-                rand_info(news_df_daily_cluster_7, 1, 250)
-        else:
-            rand_info(news_df_daily_cluster_7, 1, 250)
-        
+    else:
+        rand_info(news_df_daily_cluster_6, 1, 250)        
 
     global rand_text
     rand_text = [item + '...' for item in rand_text_]
